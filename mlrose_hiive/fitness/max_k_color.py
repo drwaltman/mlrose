@@ -38,13 +38,14 @@ class MaxKColor:
     optimization problems *only*.
     """
 
-    def __init__(self, edges):
+    def __init__(self, edges, maximize=False):
 
         # Remove any duplicates from list
         edges = list({tuple(sorted(edge)) for edge in edges})
 
         self.graph_edges = None
         self.edges = edges
+        self.maximize = maximize
         self.prob_type = 'discrete'
 
     def evaluate(self, state):
@@ -68,13 +69,21 @@ class MaxKColor:
         # This is NOT what the docs above say.
 
         if self.graph_edges is not None:
-            fitness = sum(int(state[n1] == state[n2]) for (n1, n2) in self.graph_edges)
+            if self.maximize:
+                fitness = sum(int(state[n1] != state[n2]) for (n1, n2) in self.graph_edges)
+            else:
+                fitness = sum(int(state[n1] == state[n2]) for (n1, n2) in self.graph_edges)
         else:
             fitness = 0
-            for i in range(len(self.edges)):
-                # Check for adjacent nodes of the same color
-                if state[self.edges[i][0]] == state[self.edges[i][1]]:
-                    fitness += 1
+            for (n1, n2) in self.edges:
+                if self.maximize:
+                    # Check for adjacent nodes of different color
+                    if state[n1] != state[n2]:
+                        fitness += 1
+                else:
+                    # Check for adjacent nodes of the same color
+                    if state[n1] == state[n2]:
+                        fitness += 1
 
         return fitness
 
