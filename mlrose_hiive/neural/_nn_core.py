@@ -10,10 +10,10 @@ from mlrose_hiive.algorithms.decay import GeomDecay
 from mlrose_hiive.algorithms.rhc import random_hill_climb
 from mlrose_hiive.algorithms.sa import simulated_annealing
 from mlrose_hiive.algorithms.ga import  genetic_alg
+from mlrose_hiive.algorithms.gd import gradient_descent
 
 from mlrose_hiive.neural._nn_base import _NNBase
 from mlrose_hiive.neural.activation import (identity, relu, sigmoid, tanh)
-from mlrose_hiive.neural.utils.weights import gradient_descent_original
 
 
 class _NNCore(_NNBase):
@@ -27,7 +27,7 @@ class _NNCore(_NNBase):
     def __init__(self, hidden_nodes=None, activation='relu', algorithm='random_hill_climb', max_iters=100, bias=True,
                  is_classifier=True, learning_rate=0.1, early_stopping=False, clip_max=1e+10, restarts=0,
                  schedule=GeomDecay(), pop_size=200, mutation_prob=0.1, max_attempts=10, random_state=None,
-                 curve=False):
+                 curve=False, state_fitness_callback=None, callback_user_info=None):
 
         super().__init__()
         if hidden_nodes is None:
@@ -54,6 +54,8 @@ class _NNCore(_NNBase):
         self.max_attempts = max_attempts
         self.random_state = random_state
         self.curve = curve
+        self.state_fitness_callback = state_fitness_callback
+        self.callback_user_info = callback_user_info
 
         self.node_list = []
         self.fitted_weights = []
@@ -174,12 +176,14 @@ class _NNCore(_NNBase):
         if init_weights is None:
             init_weights = np.random.uniform(-1, 1, num_nodes)
 
-        fitted_weights, loss, fitness_curve = gradient_descent_original(
+        fitted_weights, loss, fitness_curve = gradient_descent(
             problem,
             max_attempts=self.max_attempts if self.early_stopping else self.max_iters,
             max_iters=self.max_iters,
             curve=self.curve,
-            init_state=init_weights)
+            init_state=init_weights,
+            state_fitness_callback=self.state_fitness_callback,
+            callback_user_info=self.callback_user_info)
 
         return ([] if fitness_curve is None else fitness_curve), fitted_weights, loss
 
@@ -193,7 +197,9 @@ class _NNCore(_NNBase):
                 max_attempts=self.max_attempts if self.early_stopping else
                 self.max_iters,
                 max_iters=self.max_iters,
-                curve=self.curve)
+                curve=self.curve,
+                state_fitness_callback=self.state_fitness_callback,
+                callback_user_info=self.callback_user_info)
         else:
             fitted_weights, loss, _ = genetic_alg(
                 problem,
@@ -201,7 +207,9 @@ class _NNCore(_NNBase):
                 max_attempts=self.max_attempts if self.early_stopping else
                 self.max_iters,
                 max_iters=self.max_iters,
-                curve=self.curve)
+                curve=self.curve,
+                state_fitness_callback=self.state_fitness_callback,
+                callback_user_info=self.callback_user_info)
         return fitness_curve, fitted_weights, loss
 
     def _run_with_sa(self, init_weights, num_nodes, problem):
@@ -216,7 +224,9 @@ class _NNCore(_NNBase):
                 self.max_iters,
                 max_iters=self.max_iters,
                 init_state=init_weights,
-                curve=self.curve)
+                curve=self.curve,
+                state_fitness_callback=self.state_fitness_callback,
+                callback_user_info=self.callback_user_info)
         else:
             fitted_weights, loss, _ = simulated_annealing(
                 problem,
@@ -225,7 +235,9 @@ class _NNCore(_NNBase):
                 self.max_iters,
                 max_iters=self.max_iters,
                 init_state=init_weights,
-                curve=self.curve)
+                curve=self.curve,
+                state_fitness_callback=self.state_fitness_callback,
+                callback_user_info=self.callback_user_info)
         return fitness_curve, fitted_weights, loss
 
     def __run_with_rhc(self, init_weights, num_nodes, problem):
@@ -246,14 +258,18 @@ class _NNCore(_NNBase):
                                       self.max_iters,
                                       max_iters=self.max_iters,
                                       restarts=0, init_state=init_weights,
-                                      curve=self.curve)
+                                      curve=self.curve,
+                                      state_fitness_callback=self.state_fitness_callback,
+                                      callback_user_info=self.callback_user_info)
             else:
                 current_weights, current_loss, _ = random_hill_climb(
                     problem,
                     max_attempts=self.max_attempts if self.early_stopping
                     else self.max_iters,
                     max_iters=self.max_iters,
-                    restarts=0, init_state=init_weights, curve=self.curve)
+                    restarts=0, init_state=init_weights, curve=self.curve,
+                    state_fitness_callback=self.state_fitness_callback,
+                    callback_user_info=self.callback_user_info)
 
             if current_loss < loss:
                 fitted_weights = current_weights
