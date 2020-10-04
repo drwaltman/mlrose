@@ -10,10 +10,10 @@ from mlrose_hiive.algorithms.decay import GeomDecay
 from mlrose_hiive.algorithms.rhc import random_hill_climb
 from mlrose_hiive.algorithms.sa import simulated_annealing
 from mlrose_hiive.algorithms.ga import  genetic_alg
-from mlrose_hiive.algorithms.gd import gradient_descent
 
 from mlrose_hiive.neural._nn_base import _NNBase
 from mlrose_hiive.neural.activation import (identity, relu, sigmoid, tanh)
+from mlrose_hiive.neural.utils.weights import gradient_descent_original
 
 
 class _NNCore(_NNBase):
@@ -176,7 +176,7 @@ class _NNCore(_NNBase):
         if init_weights is None:
             init_weights = np.random.uniform(-1, 1, num_nodes)
 
-        fitted_weights, loss, fitness_curve = gradient_descent(
+        fitted_weights, loss, fitness_curve = gradient_descent_original(
             problem,
             max_attempts=self.max_attempts if self.early_stopping else self.max_iters,
             max_iters=self.max_iters,
