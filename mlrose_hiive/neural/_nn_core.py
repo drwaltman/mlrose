@@ -150,6 +150,7 @@ class _NNCore(_NNBase):
                                                                     self.bias,
                                                                     self.clip_max,
                                                                     self.is_classifier)
+        self.output_activation = fitness.get_output_activation()
 
         if self.algorithm == 'random_hill_climb':
             fitness_curve, fitted_weights, loss = self.__run_with_rhc(init_weights, num_nodes, problem)
@@ -164,7 +165,6 @@ class _NNCore(_NNBase):
         # Save fitted weights
         self.fitted_weights = fitted_weights
         self.loss = loss
-        self.output_activation = fitness.get_output_activation()
 
         if self.curve:
             self.fitness_curve = fitness_curve
