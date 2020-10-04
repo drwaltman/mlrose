@@ -92,14 +92,16 @@ def random_hill_climb(problem, max_attempts=10, max_iters=np.inf, restarts=0,
             problem.set_state(init_state)
 
         fitness_curve = []
-        callback_extra_data = None
         if state_fitness_callback is not None:
-            callback_extra_data = callback_user_info + [('current_restart', current_restart)]
+            if type(callback_user_info) == type([]):
+                callback_user_info += [('current_restart', current_restart)]
+            elif type(callback_user_info) == type({}):
+                callback_user_info['current_restart'] = current_restart
             # initial call with base data
             state_fitness_callback(iteration=0,
                                    state=problem.get_state(),
                                    fitness=problem.get_adjusted_fitness(),
-                                   user_data=callback_extra_data)
+                                   user_data=callback_user_info)
 
         attempts = 0
         iters = 0
@@ -133,7 +135,7 @@ def random_hill_climb(problem, max_attempts=10, max_iters=np.inf, restarts=0,
                                                             state=problem.get_state(),
                                                             fitness=problem.get_adjusted_fitness(),
                                                             curve=np.asarray(all_curves) if curve else None,
-                                                            user_data=callback_extra_data)
+                                                            user_data=callback_user_info)
                 # break out if requested
                 if not continue_iterating:
                     break
