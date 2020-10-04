@@ -131,9 +131,9 @@ class _NNCore(_NNBase):
 
         X, y = self._format_x_y_data(X, y)
 
-        node_list = self._build_node_list(X, y, self.hidden_nodes, self.bias)
+        self.node_list = self._build_node_list(X, y, self.hidden_nodes, self.bias)
 
-        num_nodes = self._calculate_state_size(node_list)
+        num_nodes = self._calculate_state_size(self.node_list)
 
         if init_weights is not None and len(init_weights) != num_nodes:
             raise Exception("""init_weights must be None or have length %d"""
@@ -144,7 +144,7 @@ class _NNCore(_NNBase):
             np.random.seed(self.random_state)
 
         fitness, problem = self._build_problem_and_fitness_function(X, y,
-                                                                    node_list,
+                                                                    self.node_list,
                                                                     self.activation_dict[self.activation],
                                                                     self.learning_rate,
                                                                     self.bias,
@@ -161,8 +161,7 @@ class _NNCore(_NNBase):
         else:  # Gradient descent case
             fitness_curve, fitted_weights, loss = self._run_with_gd(init_weights, num_nodes, problem)
 
-        # Save fitted weights and node list
-        self.node_list = node_list
+        # Save fitted weights
         self.fitted_weights = fitted_weights
         self.loss = loss
         self.output_activation = fitness.get_output_activation()
